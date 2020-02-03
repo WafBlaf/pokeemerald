@@ -684,7 +684,7 @@ bool8 DoesCurrentMapHaveFishingMons(void)
         return FALSE;
 }
 
-void FishingWildEncounter(u8 rod)
+void FishingWildEncounter()
 {
     u16 species;
 
@@ -697,7 +697,6 @@ void FishingWildEncounter(u8 rod)
     }
     else
     {
-        //switch here for rod if desired
         species = GenerateFishingWildMon(gWildMonHeaders[GetCurrentMapWildMonHeaderId()].fishingMonsInfo);
     }
     IncrementGameStat(GAME_STAT_FISHING_CAPTURES);

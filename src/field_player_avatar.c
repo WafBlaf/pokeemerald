@@ -1696,7 +1696,6 @@ static bool8 (*const sFishingStateFuncs[])(struct Task *) =
 #define tRoundsPlayed      data[12]
 #define tMinRoundsRequired data[13]
 #define tPlayerGfxId       data[14]
-#define tFishingRod        data[15]
 
 #define FISHING_START_ROUND 3
 #define FISHING_GOT_BITE 6
@@ -1705,11 +1704,10 @@ static bool8 (*const sFishingStateFuncs[])(struct Task *) =
 #define FISHING_GOT_AWAY 12
 #define FISHING_SHOW_RESULT 13
 
-void StartFishing(u8 rod)
+void StartFishing()
 {
     u8 taskId = CreateTask(Task_Fishing, 0xFF);
 
-    gTasks[taskId].tFishingRod = rod;
     Task_Fishing(taskId);
 }
 
@@ -1730,11 +1728,9 @@ static bool8 Fishing1(struct Task *task)
 static bool8 Fishing2(struct Task *task)
 {
     struct EventObject *playerEventObj;
-    const s16 arr1[] = {1, 1, 1};
-    const s16 arr2[] = {1, 3, 6};
 
     task->tRoundsPlayed = 0;
-    task->tMinRoundsRequired = arr1[task->tFishingRod] + (Random() % arr2[task->tFishingRod]);
+    task->tMinRoundsRequired = (Random() % 5) + 1;
     task->tPlayerGfxId = gEventObjects[gPlayerAvatar.eventObjectId].graphicsId;
     playerEventObj = &gEventObjects[gPlayerAvatar.eventObjectId];
     EventObjectClearHeldMovementIfActive(playerEventObj);
@@ -1869,11 +1865,11 @@ static bool8 Fishing7(struct Task *task)
 // We have a bite. Now, wait for the player to press A, or the timer to expire.
 static bool8 Fishing8(struct Task *task)
 {
-    const s16 reelTimeouts[3] = {36, 33, 30};
+    const s16 reelTimeout = 30;
 
     AlignFishingAnimationFrames();
     task->tFrameCounter++;
-    if (task->tFrameCounter >= reelTimeouts[task->tFishingRod])
+    if (task->tFrameCounter >= reelTimeout)
         task->tStep = FISHING_GOT_AWAY;
     else if (gMain.newKeys & A_BUTTON)
         task->tStep++;
@@ -1883,12 +1879,7 @@ static bool8 Fishing8(struct Task *task)
 // Determine if we're going to play the dot game again
 static bool8 Fishing9(struct Task *task)
 {
-    const s16 arr[][2] =
-    {
-        {0, 0},
-        {40, 10},
-        {70, 30}
-    };
+    const s16 arr[2] = {70, 30};
 
     AlignFishingAnimationFrames();
     task->tStep++;
@@ -1901,7 +1892,7 @@ static bool8 Fishing9(struct Task *task)
         // probability of having to play another round
         s16 probability = Random() % 100;
 
-        if (arr[task->tFishingRod][task->tRoundsPlayed] > probability)
+        if (arr[task->tRoundsPlayed] > probability)
             task->tStep = FISHING_START_ROUND;
     }
     return FALSE;
@@ -1946,7 +1937,7 @@ static bool8 Fishing11(struct Task *task)
     {
         gPlayerAvatar.preventStep = FALSE;
         ScriptContext2_Disable();
-        FishingWildEncounter(task->tFishingRod);
+        FishingWildEncounter();
         sub_80ED950(1);
         DestroyTask(FindTaskIdByFunc(Task_Fishing));
     }
