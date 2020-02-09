@@ -1316,7 +1316,9 @@ static void Task_NewGameBirchSpeech_WaitToShowBirch(u8 taskId)
         NewGameBirchSpeech_StartFadeInTarget1OutTarget2(taskId, 10);
         NewGameBirchSpeech_StartFadePlatformOut(taskId, 20);
         gTasks[taskId].tTimer = 80;
-        gTasks[taskId].func = Task_NewGameBirchSpeech_WaitForSpriteFadeInWelcome;
+        NewGameBirchSpeech_SetDefaultPlayerName(Random() % 20);
+        gTasks[taskId].func = Task_NewGameBirchSpeech_Cleanup;
+        //Task_NewGameBirchSpeech_WaitForSpriteFadeInWelcome;
     }
 }
 
