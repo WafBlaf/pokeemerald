@@ -81,7 +81,7 @@ static void SetAreaHasMon(u16, u16);
 static void SetSpecialMapHasMon(u16, u16);
 static u16 GetRegionMapSectionId(u8, u8);
 static bool8 MapHasMon(const struct WildPokemonHeader *, u16);
-static bool8 MonListHasMon(const struct WildPokemonInfo *, u16);
+static bool8 MonListHasMon(const struct WildPokemonInfo *, u16, u16);
 static void DoAreaGlow(void);
 static void Task_ShowPokedexAreaScreen(u8);
 static void CreateAreaMarkerSprites(void);
@@ -463,23 +463,23 @@ static bool8 MapHasMon(const struct WildPokemonHeader *info, u16 species)
             return FALSE;
     }
 
-    if (MonListHasMon(info->landMonsInfo, species))
+    if (MonListHasMon(info->landMonsInfo, species, 12))
         return TRUE;
-    if (MonListHasMon(info->waterMonsInfo, species))
+    if (MonListHasMon(info->waterMonsInfo, species, 5))
         return TRUE;
-    if (MonListHasMon(info->fishingMonsInfo, species))
+    if (MonListHasMon(info->fishingMonsInfo, species, 12))
         return TRUE;
-    if (MonListHasMon(info->rockSmashMonsInfo, species))
+    if (MonListHasMon(info->rockSmashMonsInfo, species, 5))
         return TRUE;
     return FALSE;
 }
 
-static bool8 MonListHasMon(const struct WildPokemonInfo *info, u16 species)
+static bool8 MonListHasMon(const struct WildPokemonInfo *info, u16 species, u16 size)
 {
     u16 i;
     if (info != NULL)
     {
-        for (i = 0; i < info->count; i++)
+        for (i = 0; i < size; i++)
         {
             if (info->wildPokemon[i].species == species)
                 return TRUE;
