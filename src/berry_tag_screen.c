@@ -26,7 +26,6 @@
 #include "item_menu_icons.h"
 #include "decompress.h"
 #include "international_string_util.h"
-#include "constants/berry.h"
 #include "constants/items.h"
 #include "constants/rgb.h"
 #include "constants/songs.h"
@@ -186,7 +185,7 @@ static void CB2_BerryTagScreen(void)
     RunTasks();
     AnimateSprites();
     BuildOamBuffer();
-    do_scheduled_bg_tilemap_copies_to_vram();
+    DoScheduledBgTilemapCopiesToVram();
     UpdatePaletteFade();
 }
 
@@ -217,7 +216,7 @@ static bool8 InitBerryTagScreen(void)
     case 0:
         SetVBlankHBlankCallbacksToNull();
         ResetVramOamAndBgCntRegs();
-        clear_scheduled_bg_copies_to_vram();
+        ClearScheduledBgCopiesToVram();
         gMain.state++;
         break;
     case 1:
@@ -277,11 +276,11 @@ static bool8 InitBerryTagScreen(void)
         gMain.state++;
         break;
     case 14:
-        BlendPalettes(-1, 0x10, 0);
+        BlendPalettes(PALETTES_ALL, 0x10, 0);
         gMain.state++;
         break;
     case 15:
-        BeginNormalPaletteFade(0xFFFFFFFF, 0, 0x10, 0, RGB_BLACK);
+        BeginNormalPaletteFade(PALETTES_ALL, 0, 0x10, 0, RGB_BLACK);
         gPaletteFade.bufferTransferDisabled = 0;
         gMain.state++;
         break;
@@ -515,7 +514,7 @@ static void DestroyFlavorCircleSprites(void)
 static void PrepareToCloseBerryTagScreen(u8 taskId)
 {
     PlaySE(SE_SELECT);
-    BeginNormalPaletteFade(0xFFFFFFFF, 0, 0, 0x10, RGB_BLACK);
+    BeginNormalPaletteFade(PALETTES_ALL, 0, 0, 0x10, RGB_BLACK);
     gTasks[taskId].func = Task_CloseBerryTagScreen;
 }
 
@@ -536,12 +535,12 @@ static void Task_HandleInput(u8 taskId)
 {
     if (!gPaletteFade.active)
     {
-        u16 arrowKeys = gMain.newAndRepeatedKeys & DPAD_ANY;
+        u16 arrowKeys = JOY_REPEAT(DPAD_ANY);
         if (arrowKeys == DPAD_UP)
             TryChangeDisplayedBerry(taskId, -1);
         else if (arrowKeys == DPAD_DOWN)
             TryChangeDisplayedBerry(taskId, 1);
-        else if (gMain.newKeys & (A_BUTTON | B_BUTTON))
+        else if (JOY_NEW(A_BUTTON | B_BUTTON))
             PrepareToCloseBerryTagScreen(taskId);
     }
 }
@@ -549,9 +548,9 @@ static void Task_HandleInput(u8 taskId)
 static void TryChangeDisplayedBerry(u8 taskId, s8 toMove)
 {
     s16 *data = gTasks[taskId].data;
-    s16 currPocketPosition = gBagPositionStruct.scrollPosition[3] + gBagPositionStruct.cursorPosition[3];
+    s16 currPocketPosition = gBagPosition.scrollPosition[BERRIES_POCKET] + gBagPosition.cursorPosition[BERRIES_POCKET];
     u32 newPocketPosition = currPocketPosition + toMove;
-    if (newPocketPosition < 46 && BagGetItemIdByPocketPosition(POCKET_BERRIES, newPocketPosition) != 0)
+    if (newPocketPosition < ITEM_TO_BERRY(MAX_BERRY_INDEX) && BagGetItemIdByPocketPosition(POCKET_BERRIES, newPocketPosition) != ITEM_NONE)
     {
         if (toMove < 0)
             data[1] = 2;
@@ -567,8 +566,8 @@ static void TryChangeDisplayedBerry(u8 taskId, s8 toMove)
 
 static void HandleBagCursorPositionChange(s8 toMove)
 {
-    u16 *scrollPos = &gBagPositionStruct.scrollPosition[3];
-    u16 *cursorPos = &gBagPositionStruct.cursorPosition[3];
+    u16 *scrollPos = &gBagPosition.scrollPosition[BERRIES_POCKET];
+    u16 *cursorPos = &gBagPosition.cursorPosition[BERRIES_POCKET];
     if (toMove > 0)
     {
         if (*cursorPos < 4 || BagGetItemIdByPocketPosition(POCKET_BERRIES, *scrollPos + 8) == 0)
@@ -675,9 +674,9 @@ static void Task_DisplayAnotherBerry(u8 taskId)
     else
         posY = data[0];
 
-    gSprites[sBerryTag->berrySpriteId].pos2.y = posY;
+    gSprites[sBerryTag->berrySpriteId].y2 = posY;
     for (i = 0; i < FLAVOR_COUNT; i++)
-        gSprites[sBerryTag->flavorCircleIds[i]].pos2.y = posY;
+        gSprites[sBerryTag->flavorCircleIds[i]].y2 = posY;
 
     ChangeBgY(1, 0x1000, data[1]);
     ChangeBgY(2, 0x1000, data[1]);
